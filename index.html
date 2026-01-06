@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <title>InteractAvatar: Text-Driven Human-Object Interaction</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #111111;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-color: #818cf8; /* Soft Indigo */
+            --accent-gradient: linear-gradient(90deg, #818cf8, #c084fc);
+            --border-color: #333;
+            --container-width: 1400px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* --- Navigation --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(16px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding: 1rem 0;
+        }
+        
+        .nav-container {
+            max-width: var(--container-width);
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-logo { 
+            font-family: 'Space Grotesk', sans-serif; 
+            font-weight: 700; 
+            font-size: 1.25rem; 
+            color: #fff; 
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+        
+        .nav-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: flex-end;}
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-links a:hover { color: #fff; text-shadow: 0 0 8px rgba(129, 140, 248, 0.6); }
+
+        /* --- Hero Section --- */
+        .hero {
+            padding: 160px 20px 80px;
+            text-align: center;
+            background: 
+                radial-gradient(circle at 50% 0%, rgba(129, 140, 248, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 0%, rgba(192, 132, 252, 0.1) 0%, transparent 40%);
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(3rem, 6vw, 5.5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            margin-bottom: 16px;
+            letter-spacing: -0.03em;
+            color: #fff;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeSlideUp 1s ease-out forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+
+        .subtitle {
+            font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+            color: #e0e0e0;
+            margin-bottom: 24px;
+            font-weight: 300;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeSlideUp 1s ease-out 0.2s forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+
+        /* --- Author Section --- */
+        .author-container {
+            margin-bottom: 30px;
+            animation: fadeSlideUp 1s ease-out 0.3s forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+        
+        .author-link {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s;
+        }
+        .author-link:hover {
+            color: #fff;
+            border-bottom-color: #fff;
+        }
+
+        /* --- Action Buttons --- */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 50px;
+            animation: fadeSlideUp 1s ease-out 0.35s forwards;
+            opacity: 0; transform: translateY(20px);
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background-color: #2a2a2a;
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 24px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .action-btn:hover {
+            background-color: #444;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border-color: #fff;
+        }
+
+        .action-btn svg { width: 20px; height: 20px; fill: currentColor; flex-shrink: 0; }
+        .action-btn svg.icon-stroke { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* --- Abstract --- */
+        .abstract {
+            max-width: 900px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+            color: #cccccc;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 40px;
+            border-radius: 24px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: fadeSlideUp 1s ease-out 0.4s forwards;
+            opacity: 0; transform: translateY(20px);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 80px;
+        }
+
+        .abstract::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.5), transparent);
+        }
+
+        /* --- Method Section (Optimized) --- */
+        .method-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            text-align: center;
+            animation: fadeSlideUp 1s ease-out 0.5s forwards;
+            opacity: 0; transform: translateY(20px);
+            padding-bottom: 40px;
+        }
+
+        .method-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            color: #fff;
+            margin-bottom: 30px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .method-figure {
+            width: 100%;
+            height: auto;
+            border-radius: 20px;
+            background-color: #ffffff; 
+            padding: 24px; 
+            border: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: block;
+        }
+
+        .method-caption {
+            margin-top: 25px;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            max-width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            color: transparent;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            font-weight: 600;
+        }
+
+        /* --- Sections --- */
+        section {
+            padding: 80px 20px;
+            max-width: var(--container-width);
+            margin: 0 auto;
+            opacity: 0; transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        section.visible { opacity: 1; transform: translateY(0); }
+
+        h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            color: #fff;
+            display: inline-block;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        section h2::after {
+            content: '';
+            position: absolute; left: 0; bottom: 0;
+            width: 60px; height: 4px;
+            background: var(--accent-gradient);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        section:hover h2::after { width: 100%; }
+
+        .section-desc {
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            margin-bottom: 50px;
+            max-width: 850px;
+            line-height: 1.8;
+            font-weight: 300;
+        }
+
+        /* --- Grid & Cards (Used for Multi-Step) --- */
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 24px;
+        }
+
+        @media (max-width: 1100px) { .grid-4 { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 800px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 500px) { .grid-4 { grid-template-columns: 1fr; } }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s, border-color 0.4s;
+            display: flex; flex-direction: column; position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border-color: rgba(129, 140, 248, 0.4);
+            z-index: 10;
+        }
+
+        .media-container { position: relative; width: 100%; background: #080808; }
+        .ratio-2-3 { aspect-ratio: 2 / 3; }
+        .ratio-auto { height: auto; min-height: 200px; }
+
+        video, img { width: 100%; height: 100%; object-fit: contain; background-color: #080808; display: block; }
+        .method-figure img { background-color: transparent; object-fit: contain; }
+
+        .caption {
+            padding: 18px;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            font-weight: 400;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            flex-grow: 1;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center;
+            background: linear-gradient(to bottom, #141414, #111111);
+        }
+
+        /* --- SOTA Styling --- */
+        .sota-group {
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(255,255,255,0.08);
+            /* SOTA in slider specific */
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+        }
+        
+        .sota-prompt-container { margin-bottom: 24px; text-align: center; }
+        .sota-prompt-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500; color: #fff; font-size: 1.15rem; line-height: 1.6;
+            display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+            overflow: hidden; transition: all 0.3s ease;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .sota-prompt-text.expanded { -webkit-line-clamp: unset; overflow: visible; }
+        
+        .sota-expand-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; font-size: 0.8rem;
+            margin-top: 12px; cursor: pointer;
+            padding: 6px 16px; border-radius: 20px;
+            transition: all 0.2s;
+        }
+        .sota-expand-btn:hover { background: var(--accent-color); border-color: var(--accent-color); }
+
+        .grid-sota { 
+            display: grid; 
+            /* MODIFIED: Changed from 6 to 7 to accommodate the new item */
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 15px; overflow-x: auto; padding-bottom: 10px;
+        }
+        
+        .sota-header {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--accent-color); margin-bottom: 10px; text-align: center; font-weight: 700;
+        }
+
+        /* --- Slider Styling --- */
+        .slider-wrapper { position: relative; display: flex; align-items: center; }
+        .slider-container {
+            display: flex; overflow-x: auto; gap: 24px; padding: 20px 5px;
+            scroll-snap-type: x mandatory; scroll-behavior: smooth;
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .slider-container::-webkit-scrollbar { display: none; }
+        
+        /* Updated Slider Card for One Row of Four */
+        .slider-card {
+            flex: 0 0 280px; scroll-snap-align: start;
+            background: var(--card-bg); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;
+            transition: transform 0.3s;
+            position: relative;
+        }
+        .slider-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.2); }
+        
+        .scroll-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 56px; height: 56px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 20; transition: all 0.2s; backdrop-filter: blur(8px);
+        }
+        .scroll-btn:hover { background: #fff; color: #000; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        .scroll-btn.left { left: -28px; }
+        .scroll-btn.right { right: -28px; }
+
+        /* --- Sound Button --- */
+        .sound-btn {
+            position: absolute; bottom: 12px; right: 12px; width: 36px; height: 36px;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 20; transition: all 0.2s ease; color: white;
+        }
+        .sound-btn:hover { background: var(--accent-color); transform: scale(1.1); border-color: var(--accent-color); }
+        .sound-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        .icon-unmuted { display: none; }
+        .muted .icon-muted { display: block; }
+        .muted .icon-unmuted { display: none; }
+        .unmuted .icon-muted { display: none; }
+        .unmuted .icon-unmuted { display: block; }
+        .unmuted { background: var(--accent-color); border-color: var(--accent-color); }
+
+        /* --- Duration Badge --- */
+        .duration-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            z-index: 20;
+            border: 1px solid rgba(255,255,255,0.2);
+            pointer-events: none;
+        }
+
+        /* Keyframes */
+        @keyframes fadeSlideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        footer {
+            text-align: center; padding: 80px 20px; color: #555;
+            font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 80px;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            /* MODIFIED: Changed mobile view to 7 items as well to keep consistency */
+            .grid-sota { grid-template-columns: repeat(7, 140px); }
+            .nav-links { display: none; }
+            .scroll-btn { display: none; }
+            .slider-card { flex: 0 0 240px; }
+            .hero { padding: 140px 20px 80px; }
+            .action-btn { font-size: 0.8rem; padding: 8px 16px; }
+            .method-figure { padding: 10px; border-radius: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-logo">InteractAvatar</a>
+            <div class="nav-links">
+                <a href="#multi-object">Multi-Object</a>
+                <a href="#multi-step">Multi-Step</a>
+                <a href="#multi-action">Multi-Action</a>
+                <a href="#long-video">Long Video</a>
+                <a href="#song-driven">Song-Driven</a>
+                <a href="#sota">Comparison</a>
+                <a href="#diff-objects">Generalization</a>
+                <a href="#single-action">Action</a>
+                <a href="#audio-only">Audio-Only</a>
+                <a href="#motion">Motion</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Making Avatars Interact</h1>
+        <p class="subtitle"> <span class="highlight">Towards Text-Driven Human-Object Interaction for Controllable Talking Avatars </span></p>
+        
+        <!-- Author Info -->
+        <div class="author-container">
+            <a href="https://hunyuan.tencent.com/" target="_blank" class="author-link">Tencent HY</a>
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-container">
+            <!-- Github -->
+            <a href="#" class="action-btn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                </svg>
+                Github
+            </a>
+            <!-- Hugging Face -->
+            <a href="#" class="action-btn">
+                <svg class="icon" viewBox="0 0 1024 1024" width="64" height="64"><path d="M62.06976 490.922667c0 47.018667 7.125333 92.074667 20.650667 134.656-1.621333-0.128-2.944-0.256-4.522667-0.256-17.92 0-34.176 6.826667-45.653333 19.285333-14.72 15.914667-21.248 35.541333-18.389334 55.168a67.242667 67.242667 0 0 0 9.130667 25.472 60.970667 60.970667 0 0 0-20.650667 32.341333c-2.773333 10.453333-5.589333 32.170667 9.173334 54.613334a62.08 62.08 0 0 0-2.688 4.48c-8.874667 16.725333-9.386667 35.712-1.578667 53.333333 11.904 26.709333 41.386667 47.701333 98.688 70.272 35.626667 14.037333 68.224 23.04 68.48 23.168 47.146667 12.117333 89.770667 18.218667 126.72 18.218667 60.458667 0 105.6-16.384 134.485333-48.810667 65.621333 11.306667 119.04 5.973333 153.258667 0.256 28.885333 32.213333 73.941333 48.597333 134.272 48.597333 36.864 0 79.530667-6.101333 126.677333-18.261333 0.256-0.085333 32.853333-9.130667 68.48-23.168 57.301333-22.613333 86.784-43.562667 98.688-70.272a59.861333 59.861333 0 0 0-1.578666-53.333333 62.634667 62.634667 0 0 0-2.688-4.48c14.762667-22.4 11.946667-44.16 9.173333-54.613334a61.013333 61.013333 0 0 0-20.650667-32.341333c4.693333-7.722667 7.808-16.128 9.173334-25.472 2.816-19.626667-3.712-39.253333-18.432-55.168a61.184 61.184 0 0 0-45.653334-19.285333l-2.56 0.085333c13.525333-42.496 20.693333-87.552 20.693334-134.485333 0-247.765333-202.069333-448.597333-451.370667-448.597334-249.258667 0-451.328 200.832-451.328 448.597334z m451.328-404.608c224.981333 0 407.381333 181.162667 407.381333 404.608a401.92 401.92 0 0 1-11.52 95.402666l-0.469333-0.64a60.714667 60.714667 0 0 0-47.274667-21.589333c-15.018667 0-30.464 4.906667-45.909333 14.677333-10.24 6.442667-21.589333 18.005333-33.28 32.426667-10.794667-14.933333-25.898667-24.917333-43.221333-27.605333a64.725333 64.725333 0 0 0-10.026667-0.768c-39.509333 0-63.232 34.133333-72.234667 64.768-4.48 10.368-25.898667 57.514667-58.069333 89.514666-49.877333 49.493333-61.696 100.394667-35.84 155.221334a395.733333 395.733333 0 0 1-100.906667-0.256c25.173333-51.712 15.488-104.064-35.968-154.965334-32.213333-32-53.589333-79.146667-58.069333-89.514666-8.96-30.634667-32.725333-64.768-72.277333-64.768-3.328 0-6.656 0.256-9.984 0.768-17.322667 2.688-32.426667 12.672-43.264 27.562666-11.648-14.378667-22.997333-25.941333-33.237334-32.426666-15.445333-9.728-30.890667-14.634667-45.909333-14.634667-18.218667 0-34.56 7.253333-46.165333 20.394667a401.92 401.92 0 0 1-11.093334-93.568c0-223.445333 182.4-404.608 407.338667-404.608z m-144.170667 212.48a58.026667 58.026667 0 0 0-26.837333 109.354666c14.976 7.936 20.864-22.442667 35.669333-27.648 13.269333-4.693333 35.882667 17.024 43.008 3.669334a57.941333 57.941333 0 0 0-23.978666-78.506667 58.282667 58.282667 0 0 0-27.861334-6.826667z m291.84 0a58.026667 58.026667 0 0 0-51.84 85.333333c7.168 13.397333 29.781333-8.32 43.050667-3.626667 14.805333 5.205333 20.736 35.626667 35.754667 27.648a57.984 57.984 0 0 0 23.978666-78.506666 58.24 58.24 0 0 0-50.901333-30.805334zM244.85376 359.381333a37.418667 37.418667 0 0 0-37.418667 37.418667c0 20.650667 16.768 37.418667 37.418667 37.418667a37.418667 37.418667 0 0 0 37.418667-37.418667 37.418667 37.418667 0 0 0-37.418667-37.418667z m539.434667 0a37.504 37.504 0 0 0-37.504 37.418667c0 20.650667 16.853333 37.418667 37.546666 37.418667a37.418667 37.418667 0 0 0 37.376-37.418667 37.418667 37.418667 0 0 0-37.418666-37.418667z m-408.661334 129.578667c-7.68-0.128-11.946667 4.693333-11.946666 17.749333 0 34.56 16.554667 90.666667 60.928 124.757334 8.832-30.378667 57.429333-54.741333 64.341333-51.242667 9.898667 4.949333 9.386667 18.816 25.941333 30.976 16.554667-12.16 15.957333-26.026667 25.813334-30.976 6.954667-3.498667 55.509333 20.864 64.341333 51.242667 44.373333-34.090667 60.928-90.197333 60.928-124.757334 0-52.096-67.541333 27.306667-151.082667 27.648-62.677333-0.256-116.352-45.013333-139.264-45.397333z m-191.189333 128.768c24.746667 15.573333 72.362667 97.066667 89.856 128.768a28.16 28.16 0 0 0 24.832 15.061333c17.834667 0 31.829333-17.664 1.664-40.106666-45.397333-33.706667-29.525333-88.917333-7.850667-92.330667a18.346667 18.346667 0 0 1 2.816-0.170667c19.712 0 28.416 33.706667 28.416 33.706667s25.429333 63.573333 69.205334 107.008c40.192 39.893333 45.312 72.661333 21.162666 113.749333-0.682667-0.170667-0.682667 0.981333-6.314666 9.173334a81.962667 81.962667 0 0 1-30.72 26.24c-21.546667 9.685333-48.597333 11.52-76.074667 11.52-44.245333 0-89.642667-7.808-115.072-14.378667-1.28-0.298667-155.733333-40.789333-136.192-77.738667 3.285333-6.186667 8.704-8.661333 15.530667-8.661333 27.562667 0 77.781333 40.746667 99.328 40.746667 4.821333 0 8.362667-3.669333 9.728-8.661334 9.6-34.346667-139.861333-44.885333-127.317334-92.330666 2.218667-8.405333 8.234667-11.776 16.64-11.776 36.437333 0 118.186667 63.701333 135.381334 63.701333 1.28 0 2.218667-0.384 2.730666-1.194667 8.576-13.738667 4.693333-25.002667-55.850666-61.44-60.501333-36.394667-103.722667-56.661333-79.573334-82.773333 2.773333-3.072 6.698667-4.352 11.52-4.352 36.693333 0 123.477333 78.506667 123.477334 78.506667s23.424 24.234667 37.589333 24.234666a8.704 8.704 0 0 0 7.936-4.48c10.026667-16.853333-93.269333-94.677333-99.114667-126.762666-3.925333-21.76 2.730667-32.768 15.189334-32.768 0 0.341333 7.253333-1.237333 21.077333 7.509333z m692.309333 25.258667c-5.845333 32.085333-109.141333 109.909333-99.114666 126.72 1.877333 3.157333 4.693333 4.522667 7.936 4.522666 14.165333 0 37.546667-24.234667 37.546666-24.234666s86.784-78.506667 123.562667-78.506667c4.778667 0 8.704 1.28 11.477333 4.309333 24.149333 26.154667-19.072 46.421333-79.573333 82.858667-60.544 36.394667-64.426667 47.616-55.850667 61.44 0.512 0.768 1.450667 1.152 2.730667 1.152 17.152 0 98.901333-63.701333 135.338667-63.701333 8.448 0 14.506667 3.370667 16.682666 11.776 12.544 47.445333-136.96 58.026667-127.317333 92.330666 1.365333 4.992 4.906667 8.661333 9.728 8.661334 21.546667 0 71.765333-40.746667 99.328-40.746667 6.826667 0 12.245333 2.474667 15.530667 8.661333 19.584 36.949333-134.954667 77.44-136.192 77.738667-25.429333 6.570667-70.826667 14.336-115.072 14.336-27.136 0-53.802667-1.706667-75.264-11.093333a82.261333 82.261333 0 0 1-31.530667-26.624c-1.706667-2.944-4.352-6.314667-6.058667-8.746667-24.448-41.301333-19.413333-74.154667 20.906667-114.176 43.776-43.477333 69.162667-107.008 69.162667-107.008s8.746667-33.706667 28.416-33.706667a18.432 18.432 0 0 1 2.858666 0.170667c21.674667 3.413333 37.546667 58.624-7.850666 92.373333-30.165333 22.4-16.213333 40.106667 1.706666 40.106667a28.16 28.16 0 0 0 24.789334-15.104c17.493333-31.701333 65.152-113.194667 89.856-128.768 23.850667-15.061333 42.24-7.765333 36.266666 25.258667z" p-id="6147"></path></svg>
+                Hugging Face
+            </a>
+
+            <!-- Report -->
+            <a href="#" class="action-btn">
+                <svg class="icon-stroke" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Report
+            </a>
+
+            <!-- Try It Now -->
+            <a href="#" class="action-btn">
+                <svg class="icon-stroke" viewBox="0 0 24 24">
+                    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
+                </svg>
+                Try It Now
+            </a>
+        </div>
+
+        <div class="abstract">
+            <p><strong>Abstract:</strong> On this page, we showcase the generative capabilities of <span class="highlight">InteractAvatar</span>. All videos presented here were generated by our model and include corresponding audio. The content is organized into eight sections, demonstrating capabilities ranging from multi-object scenarios to fine-grained multi-step controls. </p>
+            <p style="margin-top: 10px; font-size: 0.95em; color: #888;">
+                <span style="display:inline-flex; align-items:center; vertical-align:middle; margin-right:5px;">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                </span>
+                Recommended: Click the sound icon on videos for the full audio-visual experience.
+            </p>
+        </div>
+
+        <!-- Method Figure Section -->
+        <div class="method-container">
+            <h2 class="method-title">Method</h2>
+            <div class="method-figure">
+                <img src="images/pipline.png" alt="InteractAvatar Pipeline">
+            </div>
+            <p class="method-caption">
+                We propose InteractAvatar, a novel dual-stream DiT generation model centered on Grounded Human-Object Interaction for Talking Avatars, which explicitly decouples perception planning from video synthesis. Beyond the core capability of GHOI, our method is a unified framework with flexible multimodal control, accepting any combination of text, audio, and motion as inputs. 
+            </p>
+        </div>
+    </div>
+
+    <!-- Section 1: Multi-object (Slider) -->
+    <section id="multi-object">
+        <h2>Multi-object Scenario</h2>
+        <p class="section-desc">
+            In this section, all videos begin from a <span class="highlight">non-interactive reference frame containing multiple objects </span>. The model must interpret the text command to determine which object to interact with and how to do so, inferring the object's location and properties directly from the image. InteractAvatar successfully generates realistic videos from a static starting point while maintaining high audio-visual consistency.
+        </p>
+        <div class="slider-wrapper">
+            <div class="scroll-btn left" onclick="scrollSlider('slider-multi-object', 'left')">&#10094;</div>
+            <div class="slider-container" id="slider-multi-object">
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-object/139_inter_apple_0_medium_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">Pick up the apple from the table with one hand, then place it back on the table.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-object/145_inter_headphone_0_medium_01.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">Pick up the headphones on the table with both hands and put them on your ears.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-object/164_inter_phone_0_interactive_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">Reaching out and pick up the phone on the table, then began to check the messages.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-object/174_inter_camera_0_medium_01.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">Use one hand to pick up the camera on the table, hold the camera with both hands...</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-object/212_inter_laptop_3_medium_01.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">Take your hand off your head and hold the doll on the table with one hand.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-object/441_inter_toy doll_2_medium_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">First extends one hand towards a plush toy, then gently touches it with your fingers.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-object/459_inter_basketball_0_medium_01.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">Pick up the basketball on the table with both hands, hold it steadily against your chest.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-object/544_inter_coffee_1_medium_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">One hand picked up the cup on the table, and with both hands held the cup to take a sip</p>
+                </div>
+            </div>
+            <div class="scroll-btn right" onclick="scrollSlider('slider-multi-object', 'right')">&#10095;</div>
+        </div>
+    </section>
+
+    <!-- Section 2: Multi Step -->
+    <section id="multi-step">
+        <h2>Multi Step Interaction</h2>
+        <p class="section-desc">
+            We demonstrate more complex scenarios where text prompts involve <span class="highlight">fine-grained multi-step control</span>. InteractAvatar successfully adheres to these detailed sequential instructions, showcasing its strong command-following capabilities.
+        </p>
+        <div class="grid-4">
+            <div class="card">
+                <div class="media-container ratio-2-3">
+                    <video loop muted playsinline><source src="videos/multi-interaction/163_inter_hat_0_medium_02.mp4" type="video/mp4"></video>
+                </div>
+                <p class="caption">First, gently touch the flower in front of you. Then, extend one hand to pick up the hat on the table.</p>
+            </div>
+            <div class="card">
+                <div class="media-container ratio-2-3">
+                    <video loop muted playsinline><source src="videos/multi-interaction/238_inter_handbag_1_medium_02.mp4" type="video/mp4"></video>
+                </div>
+                <p class="caption">First, extend both hands and pick up the bag on the table. Then, stand up and hold the bag up in front of your chest.</p>
+            </div>
+            <div class="card">
+                <div class="media-container ratio-2-3">
+                    <video loop muted playsinline><source src="videos/multi-interaction/368_inter_handbag_1_medium_02.mp4" type="video/mp4"></video>
+                </div>
+                <p class="caption">First, carry the bag and walk forward. Then, raise the bag and hold it in front of your chest for display.</p>
+            </div>
+            <div class="card">
+                <div class="media-container ratio-2-3">
+                    <video loop muted playsinline><source src="videos/multi-interaction/507_inter_vase_0_medium_02.mp4" type="video/mp4"></video>
+                </div>
+                <p class="caption">First, extend one hand to hold the vase, then lift the vase and show it towards the window.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Multi-action (Slider) -->
+    <section id="multi-action">
+        <h2>Multi-Action Generation</h2>
+        <p class="section-desc">
+            Here, we demonstrate the ability to follow commands containing multiple sequential actions. The model accurately executes each action in the <span class="highlight">correct temporal order</span>, demonstrating a robust understanding of complex, time-ordered instructions.
+        </p>
+        <div class="slider-wrapper">
+            <div class="scroll-btn left" onclick="scrollSlider('slider-multi-action', 'left')">&#10094;</div>
+            <div class="slider-container" id="slider-multi-action">
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-action/2004_inter_None_0_3_interactive_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">First, raise one hand to greet, then make a heart shape with both hands.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-action/2011_inter_None_10_8_interactive_02.mp4" type="video/mp4"></video></div>
+                    <p class="caption">First, make the victory gesture with both hands, then clench your fists and cheer on!</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-action/2013_inter_None_11_3_interactive_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">First, cross your arms over your chest. Then, make a heart shape with your hands.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-action/250_inter_None_7_5_interactive_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">First, make the OK gesture with both hands, and then give a thumbs-up with one hand.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-action/4009_inter_None_10_1_interactive_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">First, put one hand to your mouth and speak. Then, raise both hands to greet.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-action/4009_inter_None_10_5_interactive_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">First, make the OK gesture with one hand, and then change it to the thumbs-up gesture.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-action/4009_inter_None_11_3_interactive_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">First, cross your arms over your chest. Then, make a heart shape with your hands.</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/multi-action/4009_inter_None_11_4_interactive_02.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">First, cross your arms over your chest. Then start clapping.</p>
+                </div>
+            </div>
+            <div class="scroll-btn right" onclick="scrollSlider('slider-multi-action', 'right')">&#10095;</div>
+        </div>
+    </section>
+
+    <!-- NEW SECTION: Long Video Generation -->
+    <section id="long-video">
+        <h2>Long Video Generation and Chinese</h2>
+        <p class="section-desc">
+            We demonstrate the long video generation and chinese language ability of our InteractAvatar. We divided the long video into several segments, with each segment having its own independent action description. InteractAvatar successfully adheres to these segmented sequential instructions and maintains the temporal coherence and ID consistency in long videos, showcasing its strong long video generation capabilities.
+        </p>
+        <div class="slider-wrapper">
+            <div class="scroll-btn left" onclick="scrollSlider('slider-long-video', 'left')">&#10094;</div>
+            <div class="slider-container" id="slider-long-video">
+                <!-- Replace 'video1.mp4' etc. with actual filenames from your 'videos/long_audio' folder -->
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/long_audio/194_inter_apple_2_medium_02_3.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Touch the apple with your hand.
+                        12-16s, Move the apple on the table forward.
+                        16-20s, Picks up the apple with one hand.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/long_audio/240_inter_cooking pot_1_medium_01.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Show the cooking pot forward.
+                        16-22s, Hold the pot with both hands and walk forward.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/long_audio/338_inter_milk powder tin_0_medium_01.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        8-12s, Pick up the can and examine it in front of you.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/long_audio/344_inter_camera_1_medium_02_1.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Touch the camera with one hand.
+                        12-16s, Pick up the camera with both hands.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/long_audio/367_inter_cup_0_medium_01.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        12-16s, Lift the cup to your chest with both hands.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/long_audio/399_inter_red ball_3_medium_02_1.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Holding the ball in hand and putting it down.
+                        4-8s, Raise the ball with your hand.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/long_audio/563_inter_toy doll_3_medium_02_10.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        4-8s, Hold the doll tightly.
+                    </p>
+                </div>
+            </div>
+            <div class="scroll-btn right" onclick="scrollSlider('slider-long-video', 'right')">&#10095;</div>
+        </div>
+    </section>
+
+    <!-- NEW SECTION: Song-Driven Generation -->
+    <section id="song-driven">
+        <h2>Song-Driven Generation</h2>
+        <p class="section-desc">
+            We demonstrate the song-driven generation ability of our InteractAvatar, with segmented action description. InteractAvatar generates high-quality lip dynamics and co-speech gestures in challenging singing scenarios, accurately following the action command.
+        </p>
+        <div class="slider-wrapper">
+            <div class="scroll-btn left" onclick="scrollSlider('slider-song-driven', 'left')">&#10094;</div>
+            <div class="slider-container" id="slider-song-driven">
+                <!-- Replace 'video1.mp4' etc. with actual filenames from your 'videos/song' folder -->
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/2000_inter_None_5_interactive_02_87.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Give a thumbs-up with one hand.
+
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/2001_inter_None_7_interactive_02_105.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Make the OK gesture with one hand.
+                        12-16s, Clap with both your hands.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/2002_inter_None_2_interactive_02_45.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        12-16s, Make the victory gesture with both hands.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/2003_inter_None_3_interactive_02_64.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Make a heart shape with both hands.
+                        8-12s, Put you palms together.
+                        12-16s, Clench your fists and cheer on.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/2004_inter_None_8_interactive_02_114.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Clench your fists and cheer on.
+                        20-24s, One hand resting on your chin.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/2011_inter_None_8_interactive_02_119.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Clench your fists and cheer on.
+                        8-12s, Touch your hair with one hand.
+                        20-24s, Make the OK gesture.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/3009_inter_None_0_interactive_02_8.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Raise both hand to greet.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/3009_inter_None_1_interactive_02_39.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Raise both hand to greet.
+                        20-24s, Give a thumbs-up with one hand.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/3009_inter_None_7_interactive_02_106.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Make the OK gesture with one hand.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/3009_inter_None_9_interactive_02_121.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        0-4s, Covering the face with both hands.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/3009_inter_None_11_interactive_02_28.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">
+                        12-16s, Cross your arms over your chest.
+                        20-24s, Give a thumbs-up with one hand.
+                    </p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/3009_inter_None_12_interactive_02_010.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">Static</p>
+                </div>
+                <div class="slider-card">
+                    <div class="media-container ratio-2-3">
+                        <video loop muted playsinline><source src="videos/song/3010_inter_None_0_interactive_02_007.mp4" type="video/mp4"></video>
+                    </div>
+                    <p class="caption">Static</p>
+                </div>
+            </div>
+            <div class="scroll-btn right" onclick="scrollSlider('slider-song-driven', 'right')">&#10095;</div>
+        </div>
+    </section>
+
+    <!-- Section 4: SOTA Comparison (Slider) -->
+    <section id="sota">
+        <h2>SOTA Comparison</h2>
+        <p class="section-desc">
+            We compare our method with current SOTA models. Our method demonstrates powerful text-aligned human-object interaction generation, while greatly preserving the audio-driven performance. Current SOTA audio-driven methods tend to generate only lip dynamics but <span class="highlight">ignore interaction instructions</span>.
+        </p>
+        
+        <div class="slider-wrapper">
+            <!-- Specific scroll amount for SOTA (full width) will be handled by CSS/JS adjustment or standard scroll -->
+            <div class="scroll-btn left" onclick="scrollSlider('slider-sota', 'left', 1200)">&#10094;</div>
+            <div class="slider-container" id="slider-sota">
+                
+                <!-- Case 4 -->
+                <div class="sota-group">
+                    <div class="sota-prompt-container">
+                        <div class="sota-prompt-text" id="prompt-4">
+                            One hand <span class="highlight">lifts the bag</span> on the stool to the chest, while the other hand <span class="highlight">supports the bottom</span> of the bag.
+                        </div>
+                        <!-- <button class="sota-expand-btn" onclick="togglePrompt('prompt-4', this)">Show Full Prompt</button> -->
+                    </div>
+                    <div class="grid-sota">
+                        <div class="card">
+                            <p class="sota-header">Reference</p>
+                            <div class="media-container ratio-2-3"><img src="videos/compare_videos/ref/608_inter_handbag_0_medium_01.jpeg" alt="Ref"></div>
+                        </div>
+                        <div class="card" style="border-color: var(--accent-color); border-width: 2px;">
+                            <p class="sota-header">Ours</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/ours/608_inter_handbag_0_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">HY-Avatar</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/avatar/608_inter_handbag_0_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">HuMo</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/humo/608_inter_handbag_0_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">Fantasy</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/fantacy/608_inter_handbag_0_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">Wan-S2V</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/s2v/608_inter_handbag_0_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">OminiAvatar</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/omni/608_inter_handbag_0_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Case 1 -->
+                <div class="sota-group">
+                    <div class="sota-prompt-container">
+                        <div class="sota-prompt-text" id="prompt-1">
+                            First gently holds the stem of the rose with one hand, then <span class="highlight">strokes the petals of the rose</span> with the index and middle fingers of other hand.
+                        </div>
+                        <!-- <button class="sota-expand-btn" onclick="togglePrompt('prompt-1', this)">Show Full Prompt</button> -->
+                    </div>
+                    <div class="grid-sota">
+                        <div class="card">
+                            <p class="sota-header">Reference</p>
+                            <div class="media-container ratio-2-3"><img src="videos/compare_videos/ref/316_inter_rose_3_medium_02.jpeg" alt="Ref"></div>
+                        </div>
+                        <div class="card" style="border-color: var(--accent-color); border-width: 2px;">
+                            <p class="sota-header">Ours</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/ours/316_inter_rose_3_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">HY-Avatar</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/avatar/316_inter_rose_3_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">HuMo</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/humo/316_inter_rose_3_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">Fantasy</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/fantacy/316_inter_rose_3_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">Wan-S2V</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/s2v/316_inter_rose_3_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">OminiAvatar</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/omni/316_inter_rose_3_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Case 2 -->
+                <div class="sota-group">
+                    <div class="sota-prompt-container">
+                        <div class="sota-prompt-text" id="prompt-2">
+                            Holding a brush in right hand, with the bristles facing towards face, gently <span class="highlight">touching the cheek</span> as you applies makeup to face.
+                        </div>
+                        <!-- <button class="sota-expand-btn" onclick="togglePrompt('prompt-2', this)">Show Full Prompt</button> -->
+                    </div>
+                    <div class="grid-sota">
+                        <div class="card">
+                            <p class="sota-header">Reference</p>
+                            <div class="media-container ratio-2-3"><img src="videos/compare_videos/ref/364_inter_makeup brush_0_medium_02.jpeg" alt="Ref"></div>
+                        </div>
+                        <div class="card" style="border-color: var(--accent-color); border-width: 2px;">
+                            <p class="sota-header">Ours</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/ours/364_inter_makeup brush_0_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">HY-Avatar</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/avatar/364_inter_makeup brush_0_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">HuMo</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/humo/364_inter_makeup brush_0_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">Fantasy</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/fantacy/364_inter_makeup brush_0_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">Wan-S2V</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/s2v/364_inter_makeup brush_0_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">OminiAvatar</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/omni/364_inter_makeup brush_0_medium_02.mp4" type="video/mp4"></video></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Case 3 -->
+                <div class="sota-group">
+                    <div class="sota-prompt-container">
+                        <div class="sota-prompt-text" id="prompt-3">
+                            First extend both hands to <span class="highlight">hold the vase</span>, and then <span class="highlight">move it forward</span>.
+                        </div>
+                        <!-- <button class="sota-expand-btn" onclick="togglePrompt('prompt-3', this)">Show Full Prompt</button> -->
+                    </div>
+                    <div class="grid-sota">
+                        <div class="card">
+                            <p class="sota-header">Reference</p>
+                            <div class="media-container ratio-2-3"><img src="videos/compare_videos/ref/501_inter_vase_1_medium_01.jpeg" alt="Ref"></div>
+                        </div>
+                        <div class="card" style="border-color: var(--accent-color); border-width: 2px;">
+                            <p class="sota-header">Ours</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/ours/501_inter_vase_1_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">HY-Avatar</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/avatar/501_inter_vase_1_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">HuMo</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/humo/501_inter_vase_1_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">Fantasy</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/fantacy/501_inter_vase_1_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">Wan-S2V</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/s2v/501_inter_vase_1_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                        <div class="card">
+                            <p class="sota-header">OminiAvatar</p>
+                            <div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/compare_videos/omni/501_inter_vase_1_medium_01.mp4" type="video/mp4"></video></div>
+                        </div>
+                    </div>
+                </div>
+
+                
+
+            </div>
+            <div class="scroll-btn right" onclick="scrollSlider('slider-sota', 'right', 1200)">&#10095;</div>
+        </div>
+    </section>
+
+    <!-- Section 5: Different Objects (Already Slider) -->
+    <section id="diff-objects">
+        <h2>Interaction with Different Objects</h2>
+        <p class="section-desc">
+            This section showcases interactions with <span class="highlight">32 different types</span> of common, everyday objects. InteractAvatar exhibits stable and consistent performance across all object categories, demonstrating the model's strong robustness and generalization.
+        </p>
+        
+        <div class="slider-wrapper">
+            <div class="scroll-btn left" onclick="scrollSlider('slider-objects', 'left')">&#10094;</div>
+            <div class="slider-container" id="slider-objects">
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/1050_inter_T-shirt_2_medium_02.mp4" type="video/mp4"></video></div><p class="caption">One hand holds the T-shirt, while the other hand is stroking it and giving an introduction.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/1069_inter_suitcase_0_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Pulling the suitcase with one hand and walking forward.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/1196_inter_cardboard box_0_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Crouch down and then lowered the cardboard box from your chest onto the ground, ensuring it landed smoothly.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/1209_inter_red wine bottle_2_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Hold the red wine bottle with both hands, picks it up from the table, and slowly moves it towards yourself while keeping eyes on the bottle.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/1241_inter_cooking pot_2_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Place the cooking pot with both hands on the kitchen counter.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/1255_inter_bottle_1_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Pick up the milk on the table and introduce it, then turn around</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/1273_inter_plate_0_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Pick up the plate from the table and turn around</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/1322_inter_iPad_1_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Picks up the iPad from the nightstand and places it on the bed.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/1563_inter_toy doll_3_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Crossing both hands to clutch the plush toy and hugging it more tightly.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/211_inter_fan_3_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Holds a fan in one hand, directs the fan towards face, shake your wrist to form a fanning motion.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/265_inter_basketball_0_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Steadily lifted the basketball from your chest with both hands, then slowly moved it forward until it was securely placed in the center of the wooden table.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/297_inter_clarinet_0_medium_02.mp4" type="video/mp4"></video></div><p class="caption">First placed one hand on the flute, then slowly raised other hand to pick up the flute.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/356_inter_sunglasses_0_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Gently lifted the sunglasses with right hand and let them slide down from above eyes.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/371_inter_headphone_0_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Puts the headphones with both hands on your head, and then adjusts them to ensure comfort.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/376_inter_potted plant_1_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Gently strokes the leaves of the potted plant with right hand while holding the pot steady with left hand</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/388_inter_backpack_0_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Gently strokes the top edge of the backpack with both hands then strokes one hand on the bottom edge of the backpack</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/594_inter_hat_0_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Raise hat with both hands and put the hat in your hand on your head.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/601_inter_cup_2_medium_02.mp4" type="video/mp4"></video></div><p class="caption">Reach out both hands to hold the wooden cup placed on the table, with your right index finger touch the edge.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/736_inter_sound box_0_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Supporting the sound box with both hands, and begin to introduce.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/837_inter_lipstick_0_medium_02.mp4" type="video/mp4"></video></div><p class="caption">While speaking, applying lipstick to the lower lip.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/838_inter_LEGO model_2_medium_01.mp4" type="video/mp4"></video></div><p class="caption">One hand holds the top of the Lego toy, the other hand supports the bottom, and gently lifts it.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/909_inter_electric cooker_2_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Extends one hand towards the rice cooker, gently touching the edge of the lid, preparing to lift it.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/922_inter_camera_2_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Raise the camera with both hands and look at the camera screen in front of you.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-obj/926_inter_shoe_0_medium_01.mp4" type="video/mp4"></video></div><p class="caption">Holding the shoe with one hand and pointing at it with other hand, then display it.</p></div>
+            </div>
+            <div class="scroll-btn right" onclick="scrollSlider('slider-objects', 'right')">&#10095;</div>
+        </div>
+    </section>
+
+    <!-- Section 6: Single Action (Slider) -->
+    <section id="single-action">
+        <h2>Single Action Results</h2>
+        <p class="section-desc">
+            This section illustrates the model's ability to naturally extrapolate from object interaction to <span class="highlight">human action control</span>. InteractAvatar can precisely control body movements based on text commands.
+        </p>
+        <div class="slider-wrapper">
+            <div class="scroll-btn left" onclick="scrollSlider('slider-single-action', 'left')">&#10094;</div>
+            <div class="slider-container" id="slider-single-action">
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-action/2005_inter_None_0_interactive_02.mp4" type="video/mp4"></video></div><p class="caption">Wave one hand to greet.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-action/2006_inter_None_10_interactive_02.mp4" type="video/mp4"></video></div><p class="caption">Raise one hand and make a victory gesture.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-action/3007_inter_None_12_interactive_02.mp4" type="video/mp4"></video></div><p class="caption">Squat down.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-action/3009_inter_None_18_interactive_02.mp4" type="video/mp4"></video></div><p class="caption">Put both hands on your hips.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-action/4001_inter_None_0_interactive_02.mp4" type="video/mp4"></video></div><p class="caption">Wave one hand to greet.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-action/4001_inter_None_1_interactive_02.mp4" type="video/mp4"></video></div><p class="caption">Raise both hands in front of you and then wave them to greet.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-action/4001_inter_None_5_interactive_02.mp4" type="video/mp4"></video></div><p class="caption">Raise one hand and give a thumbs-up forward.</p></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/single-action/4001_inter_None_7_interactive_02.mp4" type="video/mp4"></video></div><p class="caption">Raise one hand and make the OK gesture.</p></div>
+            </div>
+            <div class="scroll-btn right" onclick="scrollSlider('slider-single-action', 'right')">&#10095;</div>
+        </div>
+    </section>
+
+    <!-- Section 7: Audio Only (Slider) -->
+    <section id="audio-only">
+        <h2>Audio-driven Results</h2>
+        <p class="section-desc">
+            This section showcases InteractAvatar's performance in a <span class="highlight">instruction-free, audio-only</span> setting. This demonstrates that beyond interaction and action control, our model retains the core capabilities of generating high-quality lip dynamics and co-speech gestures.
+        </p>
+        <div class="slider-wrapper">
+            <div class="scroll-btn left" onclick="scrollSlider('slider-audio', 'left')">&#10094;</div>
+            <div class="slider-container" id="slider-audio">
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/a2v/1001_inter_portable play console_0_medium_01.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/a2v/218_inter_camera_1_medium_02.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/a2v/253_inter_phone_4_medium_02.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/a2v/289_inter_umbrella_3_medium_02.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/a2v/297_inter_clarinet_3_medium_02.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/a2v/334_inter_phone_0_medium_02.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/a2v/335_inter_thermos_1_medium_02.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-2-3"><video loop muted playsinline><source src="videos/a2v/834_inter_keyboard_2_medium_01.mp4" type="video/mp4"></video></div></div>
+            </div>
+            <div class="scroll-btn right" onclick="scrollSlider('slider-audio', 'right')">&#10095;</div>
+        </div>
+    </section>
+
+    <!-- Section 8: Motion Driven (Slider) -->
+    <section id="motion">
+        <h2>Motion-driven Results</h2>
+        <p class="section-desc">
+            This section highlights InteractAvatar's responsiveness to <span class="highlight">explicit motion signals</span>. As a unified digital human model, it can be controlled by any combination of text, audio, and motion.
+        </p>
+        <div class="slider-wrapper">
+            <div class="scroll-btn left" onclick="scrollSlider('slider-motion', 'left')">&#10094;</div>
+            <div class="slider-container" id="slider-motion">
+                <div class="slider-card"><div class="media-container ratio-auto"><video loop muted playsinline><source src="videos/m2v/self_collect_20250508_trans_slpit_self_collect_20250508_24_000_crop_0125.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-auto"><video loop muted playsinline><source src="videos/m2v/self_collect_20250508_trans_slpit_self_collect_20250508_25_000_crop_0050.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-auto"><video loop muted playsinline><source src="videos/m2v/self_collect_20250508_trans_slpit_self_collect_20250508_26_000_crop_0025.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-auto"><video loop muted playsinline><source src="videos/m2v/self_collect_20250508_trans_slpit_self_collect_20250508_29_000_crop_0025.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-auto"><video loop muted playsinline><source src="videos/m2v/self_collect_20250508_trans_slpit_self_collect_20250508_35_000_crop_0025.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-auto"><video loop muted playsinline><source src="videos/m2v/self_collect_20250508_trans_slpit_self_collect_20250508_40_001_crop_0050.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-auto"><video loop muted playsinline><source src="videos/m2v/self_collect_20250508_trans_slpit_self_collect_20250508_43_000_crop_0050.mp4" type="video/mp4"></video></div></div>
+                <div class="slider-card"><div class="media-container ratio-auto"><video loop muted playsinline><source src="videos/m2v/self_collect_20250508_trans_slpit_self_collect_20250508_44_000_crop_0050.mp4" type="video/mp4"></video></div></div>
+            </div>
+            <div class="scroll-btn right" onclick="scrollSlider('slider-motion', 'right')">&#10095;</div>
+        </div>
+    </section>
+
+    <footer>
+        <p>InteractAvatar Project &copy; 2025</p>
+    </footer>
+
+    <script>
+        // 1. Reveal Animations on Scroll
+        const observerOptions = { threshold: 0.1 };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => observer.observe(section));
+
+        // 2. Smart Video Playback & Metadata Loading
+        const videoObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.play();
+                } else {
+                    entry.target.pause();
+                }
+            });
+        }, { threshold: 0.2 });
+
+        document.querySelectorAll('video').forEach(video => {
+            videoObserver.observe(video);
+            
+            // 3. Inject Sound Controls & Duration Badge
+            const container = video.parentElement;
+            
+            // --- Duration Badge Logic ---
+            const badge = document.createElement('div');
+            badge.className = 'duration-badge';
+            badge.textContent = '0:00'; // Initial placeholder
+            container.appendChild(badge);
+
+            // Listen for metadata to get duration
+            video.addEventListener('loadedmetadata', function() {
+                const duration = video.duration;
+                if (!isNaN(duration) && duration !== Infinity) {
+                    const minutes = Math.floor(duration / 60);
+                    const seconds = Math.floor(duration % 60);
+                    // Format as M:SS (e.g., 0:05, 1:12)
+                    badge.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            });
+            // Fallback: if metadata already loaded
+            if (video.readyState >= 1) {
+                 const duration = video.duration;
+                 if (!isNaN(duration) && duration !== Infinity) {
+                    const minutes = Math.floor(duration / 60);
+                    const seconds = Math.floor(duration % 60);
+                    badge.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }
+
+            // --- Sound Control Logic ---
+            const btn = document.createElement('div');
+            btn.className = 'sound-btn muted';
+            btn.innerHTML = `
+                <svg class="icon-muted" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+                <svg class="icon-unmuted" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            `;
+            container.appendChild(btn);
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isMuted = video.muted;
+                if (isMuted) {
+                    document.querySelectorAll('video').forEach(v => {
+                        v.muted = true;
+                        const b = v.parentElement.querySelector('.sound-btn');
+                        if(b) { b.classList.remove('unmuted'); b.classList.add('muted'); }
+                    });
+                    video.muted = false;
+                    btn.classList.remove('muted');
+                    btn.classList.add('unmuted');
+                } else {
+                    video.muted = true;
+                    btn.classList.remove('unmuted');
+                    btn.classList.add('muted');
+                }
+            });
+        });
+
+        // 4. Horizontal Slider Logic
+        function scrollSlider(id, direction, amount = 300) {
+            const container = document.getElementById(id);
+            if (direction === 'left') {
+                container.scrollBy({ left: -amount, behavior: 'smooth' });
+            } else {
+                container.scrollBy({ left: amount, behavior: 'smooth' });
+            }
+        }
+
+        // 5. SOTA Prompt Expand Logic
+        function togglePrompt(id, btn) {
+            const textElement = document.getElementById(id);
+            textElement.classList.toggle('expanded');
+            if (textElement.classList.contains('expanded')) {
+                btn.textContent = 'Show Less';
+            } else {
+                btn.textContent = 'Show Full Prompt';
+            }
+        }
+    </script>
+</body>
+</html>
